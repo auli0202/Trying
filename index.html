@@ -2540,11 +2540,6 @@ function renderQuiz(){
   }).join('');
 
   area.innerHTML = `<div class="quiz-card">
-    <input id="quiz-kb-anchor" type="search" inputmode="text"
-      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
-      data-form-type="other"
-      style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;border:none;outline:none;font-size:16px"
-      aria-hidden="true" tabindex="-1">
     <div class="quiz-progress-wrap"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
     <div class="quiz-header">
       <span class="quiz-qnum">Q ${qIdx + 1} / ${qList.length}</span>
@@ -2555,8 +2550,6 @@ function renderQuiz(){
     <div class="quiz-word${questionClass ? ' ' + questionClass : ''}">${questionText}</div>
     <div id="q-opts">${optHTML}</div>
   </div>`;
-  // Keep keyboard open by focusing the hidden anchor input
-  setTimeout(() => { const a = document.getElementById('quiz-kb-anchor'); if(a) a.focus(); }, 50);
 
   if(timerSecs){
     qTimerSec = timerSecs;
@@ -2604,12 +2597,52 @@ function checkQ(btn, isCor, corBn){
       if(o.textContent.trim() === corText.trim()) o.classList.add('correct');
     });
   }
-  const anchor = document.getElementById('quiz-kb-anchor');
-  if(anchor) anchor.focus();
   setTimeout(() => { qIdx++; renderQuiz(); }, 1300);
 }
 
 /* ══ SPELLING TEST ═══════════════════════════════════════════════ */
+/* ── Spell section: keyboard-aware navbar (visualViewport) ── */
+(function(){
+  let _kbActive = false;
+  function _setSpellNav(kbOpen){
+    if(_kbActive === kbOpen) return;
+    _kbActive = kbOpen;
+    const nav = document.getElementById('main-nav');
+    const tab = document.getElementById('nav-arrow-tab');
+    const inSpell = document.getElementById('v-spell') &&
+                    !document.getElementById('v-spell').classList.contains('hidden');
+    if(!inSpell) return;
+    if(kbOpen){
+      if(nav) nav.classList.add('nav-hidden');
+      if(tab) tab.classList.add('nav-gone');
+      document.body.classList.add('no-nav');
+    } else {
+      if(nav) nav.classList.remove('nav-hidden');
+      if(tab) tab.classList.remove('nav-gone');
+      document.body.classList.remove('no-nav');
+    }
+  }
+  if(window.visualViewport){
+    const threshold = 150; // px — keyboard is considered open if viewport shrinks by this much
+    const fullH = () => window.screen.height;
+    window.visualViewport.addEventListener('resize', () => {
+      const kbOpen = (fullH() - window.visualViewport.height) > threshold;
+      _setSpellNav(kbOpen);
+    });
+  } else {
+    // Fallback: watch focus/blur on the spell input
+    document.addEventListener('focusin', e => {
+      if(e.target && e.target.id === 'spell-inp') _setSpellNav(true);
+    });
+    document.addEventListener('focusout', e => {
+      if(e.target && e.target.id === 'spell-inp') setTimeout(() => {
+        const focused = document.activeElement;
+        if(!focused || focused.id !== 'spell-inp') _setSpellNav(false);
+      }, 200);
+    });
+  }
+})();
+
 function initSpell(){
   triggerHaptic(); clearSpellTimer();
   const cat   = document.getElementById('spell-cat').value;
@@ -2634,7 +2667,7 @@ function renderSpell(){
   clearSpellTimer();
   const area = document.getElementById('spell-area');
   if(spellIdx >= spellList.length){
-    // Restore navbar now that quiz is done
+    // Restore navbar on score screen (keyboard will close, visualViewport fires too)
     const _navR = document.getElementById('main-nav');
     const _tabR = document.getElementById('nav-arrow-tab');
     if(_navR){ _navR.classList.remove('nav-hidden'); }
@@ -2715,22 +2748,10 @@ function renderSpell(){
       checkSpell();
     }
   });
-  // Auto-hide navbar when in spell quiz
-  const _nav = document.getElementById('main-nav');
-  const _tab = document.getElementById('nav-arrow-tab');
-  if(_nav && !_nav.classList.contains('nav-hidden')){
-    _nav.classList.add('nav-hidden');
-    if(_tab) _tab.classList.add('nav-gone');
-    document.body.classList.add('no-nav');
-  }
-
-  // Keep keyboard open: focus the real input on first render,
-  // then on subsequent renders focus the persistent anchor so keyboard never closes.
+  // Focus: use anchor bridge to keep keyboard alive across re-renders
   if(spellIdx === 0){
     setTimeout(() => inp.focus(), 80);
   } else {
-    // Transfer focus to anchor first so the OS doesn't dismiss keyboard,
-    // then immediately move to the real input — seamless on Chrome mobile.
     const anchor = document.getElementById('spell-kb-anchor');
     if(anchor){
       anchor.focus();
