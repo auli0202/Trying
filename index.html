@@ -845,7 +845,7 @@ html.dark .flip-card::after{opacity:.18;}
    MODAL
 ═══════════════════════════════════════════════ */
 
-/* ── Mobile: bottom sheet ── */
+/* ── Mobile: bottom sheet above navbar ── */
 .modal-overlay{
   position:fixed;inset:0;
   background:rgba(0,0,0,.45);
@@ -853,7 +853,9 @@ html.dark .flip-card::after{opacity:.18;}
   -webkit-backdrop-filter:blur(8px);
   z-index:1100;
   display:flex;align-items:flex-end;justify-content:center;
-  padding:0;opacity:0;pointer-events:none;
+  /* leave space for navbar at bottom */
+  padding:0 0 var(--nav-h);
+  opacity:0;pointer-events:none;
   transition:opacity .25s;
 }
 .modal-overlay.open{opacity:1;pointer-events:auto;}
@@ -862,7 +864,7 @@ html.dark .flip-card::after{opacity:.18;}
   border-radius:var(--radius-xl) var(--radius-xl) 0 0;
   padding:2rem 1.5rem 1.5rem;
   width:100%;max-width:500px;
-  max-height:92vh;overflow-y:auto;
+  max-height:80vh;overflow-y:auto;
   box-shadow:0 -8px 40px rgba(0,0,0,.25);
   transform:translateY(100%);
   transition:transform .3s cubic-bezier(.32,1.2,.64,1);
@@ -876,6 +878,14 @@ html.dark .flip-card::after{opacity:.18;}
   width:40px;height:4px;background:var(--border);border-radius:99px;
 }
 
+/* Blur header + navbar when modal is open on mobile */
+.modal-open .header,
+.modal-open .bottom-nav{
+  filter:blur(4px) brightness(.85);
+  transition:filter .25s ease;
+  pointer-events:none;
+}
+
 /* ── PC: centered dialog with blur ── */
 @media(min-width:560px){
   .modal-overlay{
@@ -886,6 +896,11 @@ html.dark .flip-card::after{opacity:.18;}
     -webkit-backdrop-filter:blur(8px);
     background:rgba(0,0,0,.45);
   }
+  /* Remove bottom offset on PC */
+  .modal-overlay{ padding-bottom:1.5rem; }
+  /* No blur on header/nav on PC (already handled by overlay) */
+  .modal-open .header,
+  .modal-open .bottom-nav{ filter:none; pointer-events:auto; }
   .modal-box{
     border-radius:var(--radius-xl);
     box-shadow:0 24px 64px rgba(0,0,0,.35);
@@ -2230,10 +2245,12 @@ function openModal(en){
   document.getElementById('word-modal').classList.add('open');
   document.getElementById('word-modal').querySelector('.modal-close').focus();
   document.body.style.overflow = 'hidden';
+  document.body.classList.add('modal-open');
 }
 function closeWordModal(){
   document.getElementById('word-modal').classList.remove('open');
   document.body.style.overflow = '';
+  document.body.classList.remove('modal-open');
 }
 function closeModal(e){
   if(e.target.id === 'word-modal') closeWordModal();
