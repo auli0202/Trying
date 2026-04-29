@@ -1007,7 +1007,7 @@ html.dark .skeleton-card::after{
    BOTTOM NAV
 ═══════════════════════════════════════════════ */
 /* Nav hide/show arrow tab — sits just above the nav bar */
-#nav-arrow-tab{
+#nav-arrow-tab{display:none!important;
   position:fixed;
   bottom:var(--nav-h);
   left:50%;
@@ -1768,8 +1768,8 @@ html.dark #blind-popup{
 
 </main>
 
-<!-- NAV HIDE/SHOW ARROW TAB -->
-<button id="nav-arrow-tab" onclick="toggleBottomNav()" aria-label="Toggle navigation bar" title="Hide/show navigation">
+<!-- NAV HIDE/SHOW ARROW TAB (hidden) -->
+<button id="nav-arrow-tab" onclick="toggleBottomNav()" aria-label="Toggle navigation bar" title="Hide/show navigation" style="display:none!important">
   <span class="arrow-icon">▼</span>
 </button>
 
@@ -2363,7 +2363,7 @@ function createCard(v){
 }
 
 /* ══ BLIND MODE POPUP ════════════════════════════════════════════ */
-function openBlindPopup(en){
+function openBlindPopup(en){ if(!isBlindMode) { openModal(en); return; }
   const v = vocab.find(x => x.en === en);
   if(!v) return;
   triggerHaptic();
