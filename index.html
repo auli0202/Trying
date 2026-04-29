@@ -731,6 +731,10 @@ html.dark .flip-card::after{opacity:.18;}
   border:2px solid var(--border);max-width:580px;margin:0 auto;
   box-shadow:var(--shadow-lg);text-align:center;
 }
+#spell-area{
+  display:flex;flex-direction:column;justify-content:center;
+  transition:min-height .3s ease;
+}
 .spell-clue{font-family:'Noto Serif Bengali',serif;font-size:1.85rem;font-weight:700;margin-bottom:.5rem;line-height:1.45;}
 .spell-pron{font-family:monospace;font-size:.95rem;color:var(--text-sub);font-weight:700;margin-bottom:.4rem;background:var(--ex-bg);display:inline-block;padding:2px 10px;border-radius:8px;}
 .spell-ex{font-size:.92rem;font-style:italic;color:var(--text-sub);margin-bottom:1rem;line-height:1.5;font-weight:600;}
@@ -2658,6 +2662,19 @@ function checkQ(btn, isCor, corBn){
     window.visualViewport.addEventListener('resize', () => {
       const kbOpen = (fullH() - window.visualViewport.height) > threshold;
       _setSpellNav(kbOpen);
+      // Center spell card in the visible area when keyboard is open
+      const area = document.getElementById('spell-area');
+      if(area){
+        if(kbOpen){
+          const visH = window.visualViewport.height;
+          // Subtract top offset of spell-area from visible height
+          const rect = area.getBoundingClientRect();
+          const available = visH - Math.max(rect.top, 0);
+          area.style.minHeight = Math.max(available - 8, 120) + 'px';
+        } else {
+          area.style.minHeight = '';
+        }
+      }
     });
   } else {
     // Fallback: watch focus/blur on the spell input
