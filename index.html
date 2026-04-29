@@ -851,7 +851,7 @@ html.dark .flip-card::after{opacity:.18;}
   transition:opacity .25s;
 }
 @media(min-width:560px){
-  .modal-overlay{align-items:flex-end;padding:0;}
+  .modal-overlay{align-items:center;justify-content:center;padding:1.5rem;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
 }
 .modal-overlay.open{opacity:1;pointer-events:auto;}
 .modal-box{
@@ -866,17 +866,22 @@ html.dark .flip-card::after{opacity:.18;}
 }
 @media(min-width:560px){
   .modal-box{
-    border-radius:var(--radius-xl) var(--radius-xl) 0 0;
-    box-shadow:0 -8px 40px rgba(0,0,0,.25);
-    transform:translateY(32px);
-    padding-top:2rem;
-    max-width:600px;
+    border-radius:var(--radius-xl);
+    box-shadow:0 24px 64px rgba(0,0,0,.35);
+    transform:translateY(20px) scale(.97);
+    padding-top:1.5rem;
+    max-width:520px;
+    width:100%;
   }
+}
+@media(min-width:560px){
+  .modal-overlay.open .modal-box{transform:translateY(0) scale(1);}
 }
 .modal-box::before{
   content:'';position:absolute;top:.75rem;left:50%;transform:translateX(-50%);
   width:40px;height:4px;background:var(--border);border-radius:99px;
 }
+@media(min-width:560px){.modal-box::before{display:none;}}
 
 .modal-overlay.open .modal-box{transform:translateY(0);}
 .modal-close{
