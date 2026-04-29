@@ -607,6 +607,10 @@ html.dark .flip-card::after{opacity:.18;}
 /* ── Rate row ──────────────────────────────── */
 .fc-rate-row{
   display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;
+  visibility:hidden;
+}
+.fc-rate-row.visible{
+  visibility:visible;
 }
 .fc-rate-btn{
   padding:.9rem .5rem;font-size:.9rem;font-weight:800;
@@ -1515,7 +1519,13 @@ input:-webkit-autofill:active{
     </select>
     <button class="btn btn-primary" onclick="initSpell()">✍️ Start Test</button>
   </div>
-  <div id="spell-area"></div>
+  <input id="spell-kb-anchor" type="search" inputmode="text"
+    autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+    data-form-type="other"
+    style="position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;
+           top:50%;left:50%;border:none;outline:none;font-size:16px;z-index:-1"
+    aria-hidden="true" tabindex="-1">
+<div id="spell-area"></div>
 </section>
 
 <!-- LIBRARY -->
@@ -2234,7 +2244,7 @@ function initFC(){
   fcList = pool.sort(() => Math.random() - .5);
   fcIdx = 0; fcFlipped = false;
   document.getElementById('fc-cat-label').textContent = (cat || 'All') + (mode !== 'all' ? ' · ' + mode : '');
-  document.getElementById('fc-rate-row').style.display = 'none';
+  document.getElementById('fc-rate-row').classList.remove('visible');
   renderFC();
   showToast('▶ ' + fcList.length + ' cards loaded — tap to flip!');
 }
@@ -2268,7 +2278,7 @@ function renderFC(){
   const isImp = v.important >= 4;
 
   if(!fcFlipped){
-    document.getElementById('fc-rate-row').style.display = 'none';
+    document.getElementById('fc-rate-row').classList.remove('visible');
     card.innerHTML = `
       <button class="fc-speak-btn" onclick="event.stopPropagation();speak('${esc(v.en)}')" aria-label="Pronounce ${v.en}">🔊</button>
       <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:.4rem;width:100%">
@@ -2278,7 +2288,7 @@ function renderFC(){
       <p class="fc-hint">tap to reveal</p>`;
     if(document.getElementById('fc-auto-speak').checked) speak(v.en);
   } else {
-    document.getElementById('fc-rate-row').style.display = 'grid';
+    document.getElementById('fc-rate-row').classList.add('visible');
     const famW = v.family
       ? v.family.split(',').map(f =>
           `<span style="background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:700">${f.trim()}</span>`
@@ -2624,6 +2634,12 @@ function renderSpell(){
   clearSpellTimer();
   const area = document.getElementById('spell-area');
   if(spellIdx >= spellList.length){
+    // Restore navbar now that quiz is done
+    const _navR = document.getElementById('main-nav');
+    const _tabR = document.getElementById('nav-arrow-tab');
+    if(_navR){ _navR.classList.remove('nav-hidden'); }
+    if(_tabR){ _tabR.classList.remove('nav-gone'); }
+    document.body.classList.remove('no-nav');
     const tot = spellOk + spellNo;
     const pct = tot ? Math.round(spellOk / tot * 100) : 0;
     area.innerHTML = `<div class="quiz-score-screen">
@@ -2699,29 +2715,30 @@ function renderSpell(){
       checkSpell();
     }
   });
-  // Auto-hide navbar when spell input is focused
-  inp.addEventListener('focus', () => {
-    const nav = document.getElementById('main-nav');
-    const tab = document.getElementById('nav-arrow-tab');
-    if(nav && !nav.classList.contains('nav-hidden')){
-      nav.classList.add('nav-hidden');
-      tab.classList.add('nav-gone');
-      document.body.classList.add('no-nav');
-      inp._navAutoHidden = true;
-    }
-  });
-  inp.addEventListener('blur', () => {
-    if(inp._navAutoHidden){
-      const nav = document.getElementById('main-nav');
-      const tab = document.getElementById('nav-arrow-tab');
-      if(nav){ nav.classList.remove('nav-hidden'); }
-      if(tab){ tab.classList.remove('nav-gone'); }
-      document.body.classList.remove('no-nav');
-      inp._navAutoHidden = false;
-    }
-  });
+  // Auto-hide navbar when in spell quiz
+  const _nav = document.getElementById('main-nav');
+  const _tab = document.getElementById('nav-arrow-tab');
+  if(_nav && !_nav.classList.contains('nav-hidden')){
+    _nav.classList.add('nav-hidden');
+    if(_tab) _tab.classList.add('nav-gone');
+    document.body.classList.add('no-nav');
+  }
 
-  setTimeout(() => inp.focus(), 100);
+  // Keep keyboard open: focus the real input on first render,
+  // then on subsequent renders focus the persistent anchor so keyboard never closes.
+  if(spellIdx === 0){
+    setTimeout(() => inp.focus(), 80);
+  } else {
+    // Transfer focus to anchor first so the OS doesn't dismiss keyboard,
+    // then immediately move to the real input — seamless on Chrome mobile.
+    const anchor = document.getElementById('spell-kb-anchor');
+    if(anchor){
+      anchor.focus();
+      setTimeout(() => inp.focus(), 0);
+    } else {
+      setTimeout(() => inp.focus(), 80);
+    }
+  }
 
   // Spell timer
   if(timerSecs){
