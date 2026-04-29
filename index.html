@@ -443,6 +443,13 @@ html.dark select{
 .blind-mode .c-tag,.blind-mode .c-bn,.blind-mode .c-ex-en,.blind-mode .c-pron,
 .blind-mode .c-ex-bn,.blind-mode .c-family-wrap,.blind-mode .c-actions{display:none!important;}
 .blind-mode .wcard{min-height:5rem;justify-content:center;}
+/* Modal must always be fully visible regardless of blind mode */
+.blind-mode .modal-overlay,
+.blind-mode .modal-box,
+.blind-mode .modal-close,
+.blind-mode #modal-content,
+.blind-mode #modal-content *{display:revert!important;visibility:visible!important;}
+.blind-mode .modal-close{display:flex!important;}
 
 /* ═══════════════════════════════════════════════
    PAGINATION
@@ -2200,9 +2207,11 @@ function openModal(en){
     </div>`;
   document.getElementById('word-modal').classList.add('open');
   document.getElementById('word-modal').querySelector('.modal-close').focus();
+  document.body.style.overflow = 'hidden';
 }
 function closeWordModal(){
   document.getElementById('word-modal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 function closeModal(e){
   if(e.target.id === 'word-modal') closeWordModal();
