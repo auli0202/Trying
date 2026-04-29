@@ -1219,7 +1219,7 @@ input:-webkit-autofill:active{
 
 
 /* ── Collapsible session controls ── */
-#flash-controls, #study-controls, #quiz-controls {
+#flash-controls, #study-controls, #quiz-controls, #spell-controls {
   transition: max-height .4s ease, opacity .4s ease, margin .4s ease, padding .4s ease;
   max-height: 300px;
   overflow: hidden;
@@ -1227,7 +1227,8 @@ input:-webkit-autofill:active{
 }
 #flash-controls.controls-hidden,
 #study-controls.controls-hidden,
-#quiz-controls.controls-hidden {
+#quiz-controls.controls-hidden,
+#spell-controls.controls-hidden {
   max-height: 0 !important;
   opacity: 0;
   margin-top: 0 !important;
@@ -1514,7 +1515,7 @@ input:-webkit-autofill:active{
 
 <!-- SPELLING TEST -->
 <section id="v-spell" class="hidden" aria-label="Spelling test">
-  <div class="controls" style="justify-content:center;flex-wrap:wrap">
+  <div id="spell-controls" class="controls" style="justify-content:center;flex-wrap:wrap">
     <select id="spell-cat" aria-label="Spelling category"><option value="">All Categories</option></select>
     <select id="spell-filter" aria-label="Spelling filter">
       <option value="all">All Words</option>
@@ -1864,6 +1865,7 @@ function showV(v){
   expandControls('flash-controls');
   expandControls('study-controls');
   expandControls('quiz-controls');
+  expandControls('spell-controls');
   triggerHaptic();
   clearQuizTimer();
   ALL_VIEWS.forEach(id => document.getElementById('v-'+id).classList.add('hidden'));
@@ -2672,7 +2674,7 @@ function checkQ(btn, isCor, corBn){
 })();
 
 function initSpell(){
-  triggerHaptic(); clearSpellTimer(); scrollToTop();
+  triggerHaptic(); clearSpellTimer(); scrollToTop(); collapseControls("spell-controls");
   const cat   = document.getElementById('spell-cat').value;
   const fltr  = document.getElementById('spell-filter').value;
   const count = parseInt(document.getElementById('spell-count')?.value || '0');
@@ -2680,7 +2682,7 @@ function initSpell(){
   if(fltr === 'review')         pool = pool.filter(v => progress[v.en] === 'r');
   else if(fltr === 'important') pool = pool.filter(v => v.important >= 4);
   else if(fltr === 'new')       pool = pool.filter(v => !progress[v.en]);
-  if(!pool.length){ showToast('No words found for this filter.'); return; }
+  if(!pool.length){ showToast('No words found for this filter.'); expandControls('spell-controls'); return; }
   pool = pool.sort(() => Math.random() - .5);
   if(count > 0) pool = pool.slice(0, count);
   spellList  = pool;
@@ -2695,6 +2697,7 @@ function renderSpell(){
   clearSpellTimer();
   const area = document.getElementById('spell-area');
   if(spellIdx >= spellList.length){
+    expandControls('spell-controls');
     // Restore navbar on score screen (keyboard will close, visualViewport fires too)
     const _navR = document.getElementById('main-nav');
     const _tabR = document.getElementById('nav-arrow-tab');
