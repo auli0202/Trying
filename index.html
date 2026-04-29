@@ -1217,6 +1217,24 @@ input:-webkit-autofill:active{
 }
 
 
+
+/* ── Collapsible session controls ── */
+#flash-controls, #study-controls, #quiz-controls {
+  transition: max-height .4s ease, opacity .4s ease, margin .4s ease, padding .4s ease;
+  max-height: 300px;
+  overflow: hidden;
+  opacity: 1;
+}
+#flash-controls.controls-hidden,
+#study-controls.controls-hidden,
+#quiz-controls.controls-hidden {
+  max-height: 0 !important;
+  opacity: 0;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
 </style>
 
 </head>
@@ -1395,7 +1413,7 @@ input:-webkit-autofill:active{
 <section id="v-flash" class="hidden" aria-label="Flashcards">
 
   <!-- Config row -->
-  <div class="controls" style="justify-content:center;flex-wrap:wrap;margin-bottom:.8rem">
+  <div id="flash-controls" class="controls" style="justify-content:center;flex-wrap:wrap;margin-bottom:.8rem">
     <select id="fc-cat" aria-label="Category for flashcards"><option value="">All Categories</option></select>
     <select id="fc-mode" aria-label="Flashcard mode">
       <option value="all">All Words</option>
@@ -1455,7 +1473,7 @@ input:-webkit-autofill:active{
 
 <!-- STUDY MODE -->
 <section id="v-study" class="hidden" aria-label="Study mode">
-  <div class="controls" style="justify-content:center;flex-wrap:wrap">
+  <div id="study-controls" class="controls" style="justify-content:center;flex-wrap:wrap">
     <select id="study-cat" aria-label="Category for study"><option value="">All Categories</option></select>
     <select id="study-filter" aria-label="Study filter">
       <option value="all">All Words</option>
@@ -1470,7 +1488,7 @@ input:-webkit-autofill:active{
 
 <!-- QUIZ -->
 <section id="v-quiz" class="hidden" aria-label="Quiz">
-  <div class="controls" style="justify-content:center;flex-wrap:wrap">
+  <div id="quiz-controls" class="controls" style="justify-content:center;flex-wrap:wrap">
     <select id="quiz-cat" aria-label="Quiz category"><option value="">All Categories</option></select>
     <select id="quiz-count" aria-label="Number of questions">
       <option value="10">10 Questions</option>
@@ -1843,6 +1861,9 @@ document.addEventListener('keydown', e => {
 /* ══ SECTION SWITCHER ═══════════════════════════════════════════ */
 const ALL_VIEWS = ['dash','browse','flash','study','quiz','spell','saved'];
 function showV(v){
+  expandControls('flash-controls');
+  expandControls('study-controls');
+  expandControls('quiz-controls');
   triggerHaptic();
   clearQuizTimer();
   ALL_VIEWS.forEach(id => document.getElementById('v-'+id).classList.add('hidden'));
@@ -2233,7 +2254,7 @@ document.getElementById('fc-card').onclick = function(){
 };
 
 function initFC(){
-  triggerHaptic();
+  triggerHaptic(); collapseControls("flash-controls");
   const cat  = document.getElementById('fc-cat').value;
   const mode = document.getElementById('fc-mode').value;
   let pool = vocab.filter(v => !cat || v.cat === cat);
@@ -2267,6 +2288,13 @@ function renderDotsFC(){
   dotsEl.innerHTML = html;
 }
 
+
+
+function collapseControls(id){ const el=document.getElementById(id); if(el) el.classList.add('controls-hidden'); }
+function expandControls(id){ const el=document.getElementById(id); if(el) el.classList.remove('controls-hidden'); }
+function scrollToTop(){
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
 function renderFC(){
   if(!fcList.length) return;
   const v = fcList[fcIdx];
@@ -2400,7 +2428,7 @@ function fcPrev(){
 
 /* ══ STUDY MODE ══════════════════════════════════════════════════ */
 function initStudy(){
-  triggerHaptic();
+  triggerHaptic(); scrollToTop(); collapseControls("study-controls");
   const cat  = document.getElementById('study-cat').value;
   const fltr = document.getElementById('study-filter').value;
   let pool   = vocab.filter(v => !cat || v.cat === cat);
@@ -2477,7 +2505,7 @@ function studyRate(q){
 function clearQuizTimer(){ clearInterval(qTimerInt); qTimerInt = null; }
 
 function startQuiz(){
-  triggerHaptic(); clearQuizTimer();
+  triggerHaptic(); scrollToTop(); collapseControls("quiz-controls"); clearQuizTimer();
   const cat   = document.getElementById('quiz-cat').value;
   const count = parseInt(document.getElementById('quiz-count').value) || 10;
   const mode  = document.getElementById('quiz-mode').value;
@@ -2644,7 +2672,7 @@ function checkQ(btn, isCor, corBn){
 })();
 
 function initSpell(){
-  triggerHaptic(); clearSpellTimer();
+  triggerHaptic(); clearSpellTimer(); scrollToTop();
   const cat   = document.getElementById('spell-cat').value;
   const fltr  = document.getElementById('spell-filter').value;
   const count = parseInt(document.getElementById('spell-count')?.value || '0');
