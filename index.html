@@ -848,7 +848,9 @@ html.dark .flip-card::after{opacity:.18;}
 /* ── Mobile: bottom sheet ── */
 .modal-overlay{
   position:fixed;inset:0;
-  background:rgba(0,0,0,.55);
+  background:rgba(0,0,0,.45);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
   z-index:1100;
   display:flex;align-items:flex-end;justify-content:center;
   padding:0;opacity:0;pointer-events:none;
