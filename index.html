@@ -1835,14 +1835,6 @@ const ALL_VIEWS = ['dash','browse','flash','study','quiz','spell','saved'];
 function showV(v){
   triggerHaptic();
   clearQuizTimer();
-  // Restore nav if it was hidden during spell session
-  const _nav = document.getElementById('main-nav');
-  const _tab = document.getElementById('nav-arrow-tab');
-  if(_nav && _nav.classList.contains('nav-hidden')){
-    _nav.classList.remove('nav-hidden');
-    if(_tab) _tab.classList.remove('nav-gone');
-    document.body.classList.remove('no-nav');
-  }
   ALL_VIEWS.forEach(id => document.getElementById('v-'+id).classList.add('hidden'));
   document.getElementById('v-'+v).classList.remove('hidden');
   document.querySelectorAll('.nav-item, .d-nav-item').forEach(n => n.classList.remove('active'));
@@ -2533,11 +2525,16 @@ function renderQuiz(){
   const optHTML = q.opts.map(o => {
     const label = isBN ? o.bn : o.en;
     const cls   = isBN ? '' : 'en-opt';
-    return `<div class="q-opt${cls ? ' ' + cls : ''}" onclick="checkQ(this,${o.en === q.cor.en},'${esc(q.cor.bn)}')" role="button" tabindex="0"
+    return `<div class="q-opt${cls ? ' ' + cls : ''}" onpointerdown="event.preventDefault()" onclick="checkQ(this,${o.en === q.cor.en},'${esc(q.cor.bn)}')" role="button" tabindex="0"
       onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}">${label}</div>`;
   }).join('');
 
   area.innerHTML = `<div class="quiz-card">
+    <input id="quiz-kb-anchor" type="search" inputmode="text"
+      autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"
+      data-form-type="other"
+      style="position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;border:none;outline:none;font-size:16px"
+      aria-hidden="true" tabindex="-1">
     <div class="quiz-progress-wrap"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
     <div class="quiz-header">
       <span class="quiz-qnum">Q ${qIdx + 1} / ${qList.length}</span>
@@ -2548,6 +2545,8 @@ function renderQuiz(){
     <div class="quiz-word${questionClass ? ' ' + questionClass : ''}">${questionText}</div>
     <div id="q-opts">${optHTML}</div>
   </div>`;
+  // Keep keyboard open by focusing the hidden anchor input
+  setTimeout(() => { const a = document.getElementById('quiz-kb-anchor'); if(a) a.focus(); }, 50);
 
   if(timerSecs){
     qTimerSec = timerSecs;
@@ -2595,6 +2594,8 @@ function checkQ(btn, isCor, corBn){
       if(o.textContent.trim() === corText.trim()) o.classList.add('correct');
     });
   }
+  const anchor = document.getElementById('quiz-kb-anchor');
+  if(anchor) anchor.focus();
   setTimeout(() => { qIdx++; renderQuiz(); }, 1300);
 }
 
@@ -2698,20 +2699,29 @@ function renderSpell(){
       checkSpell();
     }
   });
-  // Auto-hide navbar when spell input is focused — keep hidden for entire spell session
+  // Auto-hide navbar when spell input is focused
   inp.addEventListener('focus', () => {
     const nav = document.getElementById('main-nav');
     const tab = document.getElementById('nav-arrow-tab');
     if(nav && !nav.classList.contains('nav-hidden')){
       nav.classList.add('nav-hidden');
-      if(tab) tab.classList.add('nav-gone');
+      tab.classList.add('nav-gone');
       document.body.classList.add('no-nav');
+      inp._navAutoHidden = true;
     }
   });
-  // Do NOT restore nav on blur — keyboard dismiss causes layout jump which closes keyboard.
-  // Nav is restored when leaving the spell section (showV handles cleanup).
+  inp.addEventListener('blur', () => {
+    if(inp._navAutoHidden){
+      const nav = document.getElementById('main-nav');
+      const tab = document.getElementById('nav-arrow-tab');
+      if(nav){ nav.classList.remove('nav-hidden'); }
+      if(tab){ tab.classList.remove('nav-gone'); }
+      document.body.classList.remove('no-nav');
+      inp._navAutoHidden = false;
+    }
+  });
 
-  setTimeout(() => inp.focus({ preventScroll: true }), 50);
+  setTimeout(() => inp.focus(), 100);
 
   // Spell timer
   if(timerSecs){
@@ -2749,7 +2759,7 @@ function hintSpell(){
     if(lb){ lb.textContent = v.en[i]; lb.className = 'letter-box revealed'; }
   }
   const inp = document.getElementById('spell-inp');
-  if(inp){ inp.value = v.en.slice(0, spellHints); inp.focus({ preventScroll: true }); }
+  if(inp){ inp.value = v.en.slice(0, spellHints); inp.focus(); }
 }
 
 function checkSpell(){
@@ -2769,14 +2779,14 @@ function checkSpell(){
       const lb = document.getElementById('lb-' + i);
       if(lb){ lb.textContent = v.en[i]; lb.className = 'letter-box correct-box'; }
     });
-    inp.focus({ preventScroll: true });
+    inp.focus();
     setTimeout(() => { spellIdx++; spellHints = 0; renderSpell(); }, 1400);
   } else {
     inp.className = 'spell-input wrong-inp';
     res.innerHTML = `❌ Answer: <strong>${v.en}</strong>${v.ex_en ? `<div class="spell-reveal-ex">${v.ex_en}</div>` : ''}`;
     res.className = 'spell-result no';
     spellNo++;
-    inp.focus({ preventScroll: true });
+    inp.focus();
     setTimeout(() => { spellIdx++; spellHints = 0; renderSpell(); }, 2000);
   }
 }
