@@ -866,9 +866,7 @@ html.dark .flip-card::after{opacity:.18;}
 /* ── Mobile: sheet anchored just above navbar ── */
 .modal-overlay{
   position:fixed;
-  top:0;left:0;right:0;
-  /* bottom edge sits at top of navbar */
-  bottom:var(--nav-h);
+  top:0;left:0;right:0;bottom:0;
   background:rgba(0,0,0,.45);
   backdrop-filter:blur(10px);
   -webkit-backdrop-filter:blur(10px);
@@ -877,6 +875,8 @@ html.dark .flip-card::after{opacity:.18;}
   align-items:flex-end;
   justify-content:center;
   padding:0;
+  padding-bottom:var(--nav-h);
+  overflow:hidden;
   opacity:0;pointer-events:none;
   transition:opacity .25s;
 }
@@ -889,10 +889,11 @@ html.dark .flip-card::after{opacity:.18;}
   max-height:82vh;overflow-y:auto;
   box-shadow:0 -8px 40px rgba(0,0,0,.3);
   transform:translateY(100%);
-  transition:transform .32s cubic-bezier(.32,1.1,.64,1);
+  visibility:hidden;
+  transition:transform .32s cubic-bezier(.32,1.1,.64,1), visibility 0s linear .32s;
   position:relative;
 }
-.modal-overlay.open .modal-box{transform:translateY(0);}
+.modal-overlay.open .modal-box{transform:translateY(0);visibility:visible;transition:transform .32s cubic-bezier(.32,1.1,.64,1), visibility 0s linear 0s;}
 
 /* handle bar */
 .modal-box::before{
@@ -1006,8 +1007,9 @@ html.dark .skeleton-card::after{
 /* ═══════════════════════════════════════════════
    BOTTOM NAV
 ═══════════════════════════════════════════════ */
-/* Nav hide/show arrow tab — sits just above the nav bar */
-#nav-arrow-tab{display:none!important;
+/* Nav hide/show arrow tab — disabled feature, fully hidden */
+#nav-arrow-tab{
+  display:none!important;
   position:fixed;
   bottom:var(--nav-h);
   left:50%;
@@ -1086,7 +1088,7 @@ html.dark .bottom-nav{
 }
 .nav-item.active{color:var(--accent);}
 .nav-item.active::after{transform:scaleX(1);}
-.nav-icon{font-size:1.25rem;line-height:1;}
+.nav-icon{font-size:1.25rem;line-height:1;display:flex;align-items:center;justify-content:center;height:1.4rem;overflow:hidden;}
 .nav-label{font-size:.58rem;font-weight:700;margin-top:3px;letter-spacing:.02em;}
 
 /* ═══════════════════════════════════════════════
@@ -1321,6 +1323,7 @@ input:-webkit-autofill:active{
   z-index:1100;
   pointer-events:none;
   transition:background .25s;
+  overflow:hidden;
 }
 #blind-popup-overlay.open{
   background:rgba(0,0,0,.38);
@@ -1345,12 +1348,15 @@ input:-webkit-autofill:active{
   max-height:72vh;
   overflow-y:auto;
   transform:translateY(110%);
-  transition:transform .36s cubic-bezier(.32,1.1,.64,1);
+  visibility:hidden;
+  transition:transform .36s cubic-bezier(.32,1.1,.64,1), visibility 0s linear .36s;
   pointer-events:none;
 }
 #blind-popup-overlay.open #blind-popup{
   transform:translateY(0);
   pointer-events:auto;
+  visibility:visible;
+  transition:transform .36s cubic-bezier(.32,1.1,.64,1), visibility 0s linear 0s;
 }
 #blind-popup::before{
   content:'';position:absolute;top:.75rem;left:50%;transform:translateX(-50%);
@@ -1550,7 +1556,7 @@ html.dark #blind-popup{
           <span class="chip-label">Review</span><span class="chip-val" id="c-r">0</span>
         </div>
       </div>
-      <div class="progress-track" role="progressbar" aria-label="Overall progress">
+      <div class="progress-track" role="progressbar" aria-label="Overall progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div id="overall-progress-fill"></div>
       </div>
     </div>
@@ -1654,7 +1660,7 @@ html.dark #blind-popup{
     </div>
 
     <!-- Rate row (shown after flip) -->
-    <div id="fc-rate-row" class="fc-rate-row" style="display:none" aria-label="Rate your recall">
+    <div id="fc-rate-row" class="fc-rate-row" aria-label="Rate your recall">
       <button class="fc-rate-btn easy" onclick="fcRate('easy')">
         <span class="rb-emoji">😊</span>Easy
       </button>
@@ -2063,6 +2069,7 @@ document.addEventListener('keydown', e => {
   if(e.key === ' ' && document.activeElement.id === 'fc-card') {
     e.preventDefault();
     fcFlipped = !fcFlipped; renderFC();
+    if(!fcFlipped && document.getElementById('fc-auto-speak')?.checked && fcList[fcIdx]) speak(fcList[fcIdx].en);
   }
 });
 
@@ -2196,6 +2203,7 @@ function updateStats(){
   const pct = total > 0 ? ((mCnt + rCnt) / total * 100) : 0;
   document.getElementById('overall-progress-fill').style.width = pct + '%';
   document.getElementById('overall-progress-fill').setAttribute('aria-valuenow', Math.round(pct));
+  document.querySelector('.progress-track[role="progressbar"]')?.setAttribute('aria-valuenow', Math.round(pct));
   try{ localStorage.setItem('hscEliteData', JSON.stringify(progress)); }catch(e){}
 }
 
