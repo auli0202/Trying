@@ -845,16 +845,20 @@ html.dark .flip-card::after{opacity:.18;}
    MODAL
 ═══════════════════════════════════════════════ */
 
-/* ── Mobile: bottom sheet above navbar ── */
+/* ── Mobile: sheet anchored just above navbar ── */
 .modal-overlay{
-  position:fixed;inset:0;
+  position:fixed;
+  top:0;left:0;right:0;
+  /* bottom edge sits at top of navbar */
+  bottom:var(--nav-h);
   background:rgba(0,0,0,.45);
-  backdrop-filter:blur(8px);
-  -webkit-backdrop-filter:blur(8px);
-  z-index:1100;
-  display:flex;align-items:flex-end;justify-content:center;
-  /* leave space for navbar at bottom */
-  padding:0 0 var(--nav-h);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  z-index:1050;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:0;
   opacity:0;pointer-events:none;
   transition:opacity .25s;
 }
@@ -863,44 +867,53 @@ html.dark .flip-card::after{opacity:.18;}
   background:var(--card-bg);
   border-radius:var(--radius-xl) var(--radius-xl) 0 0;
   padding:2rem 1.5rem 1.5rem;
-  width:100%;max-width:500px;
-  max-height:80vh;overflow-y:auto;
-  box-shadow:0 -8px 40px rgba(0,0,0,.25);
+  width:100%;
+  max-height:82vh;overflow-y:auto;
+  box-shadow:0 -8px 40px rgba(0,0,0,.3);
   transform:translateY(100%);
-  transition:transform .3s cubic-bezier(.32,1.2,.64,1);
+  transition:transform .32s cubic-bezier(.32,1.1,.64,1);
   position:relative;
 }
 .modal-overlay.open .modal-box{transform:translateY(0);}
 
-/* handle bar — mobile only */
+/* handle bar */
 .modal-box::before{
   content:'';position:absolute;top:.75rem;left:50%;transform:translateX(-50%);
   width:40px;height:4px;background:var(--border);border-radius:99px;
 }
 
-/* Blur header + navbar when modal is open on mobile */
-.modal-open .header,
+/* Glossy effect on header + navbar when modal open (mobile) */
+.modal-open .header{
+  backdrop-filter:blur(24px) saturate(2.5) brightness(1.15);
+  -webkit-backdrop-filter:blur(24px) saturate(2.5) brightness(1.15);
+  box-shadow:0 2px 24px rgba(255,255,255,.08),inset 0 1px 0 rgba(255,255,255,.18);
+  transition:backdrop-filter .25s,box-shadow .25s;
+}
 .modal-open .bottom-nav{
-  filter:blur(4px) brightness(.85);
-  transition:filter .25s ease;
-  pointer-events:none;
+  backdrop-filter:blur(24px) saturate(2.5) brightness(1.15);
+  -webkit-backdrop-filter:blur(24px) saturate(2.5) brightness(1.15);
+  box-shadow:0 -2px 24px rgba(255,255,255,.08),inset 0 -1px 0 rgba(255,255,255,.18);
+  transition:backdrop-filter .25s,box-shadow .25s;
 }
 
 /* ── PC: centered dialog with blur ── */
 @media(min-width:560px){
   .modal-overlay{
+    top:0;left:0;right:0;bottom:0;
     align-items:center;
     justify-content:center;
     padding:1.5rem;
-    backdrop-filter:blur(8px);
-    -webkit-backdrop-filter:blur(8px);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
     background:rgba(0,0,0,.45);
   }
-  /* Remove bottom offset on PC */
-  .modal-overlay{ padding-bottom:1.5rem; }
-  /* No blur on header/nav on PC (already handled by overlay) */
+  /* No glossy effect on header/nav on PC */
   .modal-open .header,
-  .modal-open .bottom-nav{ filter:none; pointer-events:auto; }
+  .modal-open .bottom-nav{
+    backdrop-filter:blur(20px) saturate(1.8);
+    -webkit-backdrop-filter:blur(20px) saturate(1.8);
+    box-shadow:none;
+  }
   .modal-box{
     border-radius:var(--radius-xl);
     box-shadow:0 24px 64px rgba(0,0,0,.35);
@@ -909,7 +922,6 @@ html.dark .flip-card::after{opacity:.18;}
     padding-top:1.5rem;
     max-width:520px;
     width:100%;
-    /* center within overlay */
     margin:auto;
   }
   .modal-overlay.open .modal-box{transform:scale(1) translateY(0);}
